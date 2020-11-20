@@ -8,6 +8,8 @@ BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
 
+cd "${BUILD_DIR}"
+
 # shellcheck source=vendor/stdlib.sh
 source "${BUILDPACK_DIR}/vendor/stdlib.sh"
 # shellcheck source=lib/jvm_buildpack_utils.sh
@@ -95,8 +97,6 @@ fi
 
 maven_executable="mvn"
 if has_maven_wrapper "${BUILD_DIR}"; then
-	pwd
-	echo "${BUILD_DIR}"
 	maven_executable="./mvnw"
 fi
 
