@@ -11,6 +11,12 @@ function detect_maven_version() {
 	echo "${selected_version:-$default_version}"
 }
 
+function is_maven_version_configured() {
+	local -r app_directory="${1:?}"
+
+	[[ $(detect_maven_version "${app_directory}" "") != "" ]]
+}
+
 function get_maven_tarball_url() {
 	local -r maven_version="${1:?}"
 

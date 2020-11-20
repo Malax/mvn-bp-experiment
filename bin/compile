@@ -32,7 +32,7 @@ JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-https://buildpack-registry.s3.amazo
 
 # Defaults
 MAVEN_DEFAULT_VERSION="3.6.2"
-MAVEN_DEFAULT_OPTS="-DskipTests"
+MAVEN_DEFAULT_OPTS="-DskipTests -DoutputFile=target/mvn-dependency-list.log"
 MAVEN_DEFAULT_GOALS="clean dependency:list install"
 
 ########################################################################################################################
@@ -52,8 +52,15 @@ mtime "jvm.install.time" "${start}"
 
 ########################################################################################################################
 
+if has_maven_wrapper "${BUILD_DIR}" && is_maven_version_configured "${BUILD_DIR}"; then
+	cat <<-EOF
+		You have Maven wrapper in your application, but also a Maven version specified in your system.properties
+		file. Maven wrapper will not be used.
+	EOF
+fi
+
 # Install Maven
-if ! has_maven_wrapper "${BUILD_DIR}"; then
+if is_maven_version_configured "${BUILD_DIR}" || ! has_maven_wrapper "${BUILD_DIR}"; then
 	selected_version=$(detect_maven_version "${BUILD_DIR}" "${MAVEN_DEFAULT_VERSION}")
 	maven_tarball_url=$(get_maven_tarball_url "${selected_version}")
 
@@ -110,12 +117,15 @@ fi
 # We need to set some options that relate to buildpack implementation internals. Those options must not be overridden
 # by the user via MAVEN_CUSTOM_OPTS for the buildpack to work correctly. We also don't want to show them when we log
 # the Maven command we're running since they might be confusing to the user.
-internal_maven_opts="-Duser.home=${BUILD_DIR} -Dmaven.repo.local=${CACHE_DIR}/.m2/repository"
+internal_maven_opts="-B -Duser.home=${BUILD_DIR} -Dmaven.repo.local=${CACHE_DIR}/.m2/repository"
 
 # MAVEN_OPTS control JVM options that are used by Maven itself. Since we know the build environment ahead of time, we
 # can set this to a fixed value that works well.
 export MAVEN_OPTS="-Xmx1024m"
 
+########################################################################################################################
+
+echo "Executing Maven"
 echo "$ ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}"
 
 # shellcheck disable=SC2086
@@ -123,8 +133,7 @@ echo "$ ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}"
 # multiple arguments which would be interpreted as one if quoted.
 ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}
 
-# Remove(?) Maven
-ls -lah .
+########################################################################################################################
 
 # Log statistics about non-Java source files in the application
 if [[ -n "$(find "${BUILD_DIR}" -type f -name "*.kt")" ]]; then
