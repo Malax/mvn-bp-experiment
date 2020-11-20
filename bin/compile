@@ -42,13 +42,15 @@ jvm_common_install_start_time=$(nowms)
 jvm_common_directory=$(mktemp -d)
 bputils::download_and_extract_tarball "${JVM_COMMON_BUILDPACK}" "${jvm_common_directory}"
 
-set +u
+set +u # jvm-common uses unset variables
+
 # shellcheck disable=SC1090
 source "${jvm_common_directory}/bin/util"
 # shellcheck disable=SC1090
 source "${jvm_common_directory}/bin/java"
 # shellcheck disable=SC1090
 source "${jvm_common_directory}/opt/jdbc.sh"
+
 set -u
 
 mtime "jvm-common.install.time" "${jvm_common_install_start_time}"
@@ -91,9 +93,9 @@ fi
 
 # Resolve Maven settings.xml file to use:
 settings_file_path=""
-if [[ -n "${MAVEN_SETTINGS_PATH}" ]]; then
+if [[ -n "${MAVEN_SETTINGS_PATH:-}" ]]; then
 	settings_file_path="${MAVEN_SETTINGS_PATH}"
-elif [[ -n "${MAVEN_SETTINGS_URL}" ]]; then
+elif [[ -n "${MAVEN_SETTINGS_URL:-}" ]]; then
 	settings_file_path=$(mktemp)
 	if ! bputils::download_file "${MAVEN_SETTINGS_URL}" "${settings_file_path}"; then
 		cat <<-EOF
