@@ -5,7 +5,7 @@
 #
 # See: https://docs.oracle.com/javase/10/docs/api/java/util/Properties.html#load(java.io.Reader)
 ##
-get_java_properties_value() {
+bputils::get_java_properties_value() {
 	local -r key=${1:?}
 	local -r regex="^ *([^= ]*)[=: ]+(.*)$"
 
@@ -21,13 +21,13 @@ get_java_properties_value() {
 	false
 }
 
-download_and_extract_tarball() {
+bputils::download_and_extract_tarball() {
 	local -r tarball_url="${1:?}"
 	local -r target_directory="${2:?}"
 	curl --retry 3 --silent --max-time 60 --location "${tarball_url}" | tar -xzm -C "${target_directory}"
 }
 
-download_file() {
+bputils::download_file() {
 	local -r url="${1:?}"
 	local -r target_path="${2:?}"
 	curl --retry 3 --silent --max-time 10 --location "${url}" --output "${target_path}"

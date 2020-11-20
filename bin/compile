@@ -52,17 +52,10 @@ mtime "jvm.install.time" "${start}"
 
 ########################################################################################################################
 
-if has_maven_wrapper "${BUILD_DIR}" && is_maven_version_configured "${BUILD_DIR}"; then
-	cat <<-EOF
-		You have Maven wrapper in your application, but also a Maven version specified in your system.properties
-		file. Maven wrapper will not be used.
-	EOF
-fi
-
 # Install Maven
-if ! use_maven_wrapper "${BUILD_DIR}"; then
-	selected_version=$(detect_maven_version "${BUILD_DIR}" "${MAVEN_DEFAULT_VERSION}")
-	maven_tarball_url=$(get_maven_tarball_url "${selected_version}")
+if ! maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
+	configured_version=$(maven::get_configured_version "${BUILD_DIR}" "${MAVEN_DEFAULT_VERSION}")
+	maven_tarball_url=$(maven::tarball_url_for_version "${configured_version}")
 
 	if [[ -z "${maven_tarball_url}" ]]; then
 		cat <<-EOF
@@ -73,7 +66,7 @@ if ! use_maven_wrapper "${BUILD_DIR}"; then
 	fi
 
 	directory=$(mktemp -d)
-	if ! download_and_extract_tarball "${maven_tarball_url}" "${directory}"; then
+	if ! bputils::download_and_extract_tarball "${maven_tarball_url}" "${directory}"; then
 		cat <<-EOF
 			Error, could not download and extract Maven distribution. Please try again.
 			If this error persists, please contact support.
@@ -91,7 +84,7 @@ if [[ -n "${MAVEN_SETTINGS_PATH}" ]]; then
 	settings_file_path="${MAVEN_SETTINGS_PATH}"
 elif [[ -n "${MAVEN_SETTINGS_URL}" ]]; then
 	settings_file_path=$(mktemp)
-	if ! download_file "${MAVEN_SETTINGS_URL}" "${settings_file_path}"; then
+	if ! bputils::download_file "${MAVEN_SETTINGS_URL}" "${settings_file_path}"; then
 		cat <<-EOF
 			Could not download settings.xml from the URL defined in MAVEN_SETTINGS_URL:
 			${MAVEN_SETTINGS_URL}
@@ -103,7 +96,7 @@ elif [[ -f "${BUILD_DIR}/settings.xml" ]]; then
 fi
 
 maven_executable="mvn"
-if use_maven_wrapper "${BUILD_DIR}"; then
+if maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
 	maven_executable="./mvnw"
 fi
 
