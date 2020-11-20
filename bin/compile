@@ -168,7 +168,7 @@ pushd "${BUILD_DIR}" > /dev/null
 # We must not quote the arguments here since maven_opts, internal_maven_opts, and maven_goals might contain
 # multiple arguments which would be interpreted as one if quoted.
 # shellcheck disable=SC2086
-if ! ${maven_executable}a ${maven_opts} ${internal_maven_opts} ${maven_goals}; then
+if ! ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}; then
 	log::classic::error <<-EOF
 		Failed to build app with Maven
 
