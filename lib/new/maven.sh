@@ -14,7 +14,7 @@ function maven::get_configured_version() {
 function maven::is_version_configured() {
 	local -r app_directory="${1:?}"
 
-	[[ $(detect_maven_version "${app_directory}" "") != "" ]]
+	[[ $(maven::get_configured_version "${app_directory}" "") != "" ]]
 }
 
 function maven::should_use_wrapper_for_app() {
