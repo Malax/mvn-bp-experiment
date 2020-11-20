@@ -116,7 +116,11 @@ internal_maven_opts="-Duser.home=${BUILD_DIR} -Dmaven.repo.local=${CACHE_DIR}/.m
 # can set this to a fixed value that works well.
 export MAVEN_OPTS="-Xmx1024m"
 
-${maven_executable} "${maven_opts}" "${internal_maven_opts}" "${maven_goals}"
+
+# shellcheck disable=SC2086
+# We must not quote the arguments here since maven_opts, internal_maven_opts, and maven_goals might contain
+# multiple arguments which would be interpreted as one if quoted.
+${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}
 
 # Remove(?) Maven
 
