@@ -4,11 +4,9 @@
 set -euo pipefail
 
 BUILDPACK_DIR=$(cd "$(dirname "${0}")/.."; pwd)
-BUILD_DIR=$1
-CACHE_DIR=$2
-ENV_DIR=$3
-
-cd "${BUILD_DIR}"
+BUILD_DIR="${1}"
+CACHE_DIR="${2}"
+ENV_DIR="${3}"
 
 # shellcheck source=vendor/stdlib.sh
 source "${BUILDPACK_DIR}/vendor/stdlib.sh"
@@ -141,6 +139,8 @@ maven_execution_start_time=$(nowms)
 echo "Executing Maven"
 echo "$ ${maven_executable} ${maven_opts} ${maven_goals}"
 
+pushd "${BUILD_DIR}"
+
 # We must not quote the arguments here since maven_opts, internal_maven_opts, and maven_goals might contain
 # multiple arguments which would be interpreted as one if quoted.
 # shellcheck disable=SC2086
@@ -154,14 +154,20 @@ if ! ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}; th
 	exit 1
 fi
 
+popd
+
 mtime "mvn.compile.time" "${maven_execution_start_time}"
 mtime "mvn.compile.time.cache.${maven_cache_status}" "${maven_execution_start_time}"
 
 ########################################################################################################################
 # Generate dependencies list file
 
+pushd "${BUILD_DIR}"
+
 # shellcheck disable=SC2086
 ${maven_executable} "-DoutputFile=target/mvn-dependency-list.log" ${internal_maven_opts} "dependency:list" >/dev/null 2>&1
+
+popd
 
 ########################################################################################################################
 
