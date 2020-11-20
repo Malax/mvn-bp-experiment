@@ -15,10 +15,10 @@ function get_maven_tarball_url() {
 	local -r maven_version="${1:?}"
 
 	declare -A maven_tarball_urls
-	maven_tarball_urls[1.0.0]="https://whatever.tar.gz"
-	maven_tarball_urls[2.0.0]="https://whatever.tar.gz"
-	maven_tarball_urls[3.0.0]="https://whatever.tar.gz"
-	maven_tarball_urls[4.0.0]="https://whatever.tar.gz"
+	maven_tarball_urls[3.6.2]="https://lang-jvm.s3.amazonaws.com/maven-3.6.2.tar.gz"
+	maven_tarball_urls[3.5.4]="https://lang-jvm.s3.amazonaws.com/maven-3.5.4.tar.gz"
+	maven_tarball_urls[3.3.9]="https://lang-jvm.s3.amazonaws.com/maven-3.3.9.tar.gz"
+	maven_tarball_urls[3.2.5]="https://lang-jvm.s3.amazonaws.com/maven-3.2.5.tar.gz"
 
 	echo "${maven_tarball_urls["${maven_version}"]}"
 }
