@@ -32,3 +32,7 @@ bputils::download_file() {
 	local -r target_path="${2:?}"
 	curl --retry 3 --silent --max-time 10 --location "${url}" --output "${target_path}"
 }
+
+bputils::runs_as_cnb() {
+	[[ -n "${CNB_STACK_ID:-}" ]]
+}

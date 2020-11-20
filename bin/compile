@@ -33,7 +33,7 @@ JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-https://buildpack-registry.s3.amazo
 # Defaults
 MAVEN_DEFAULT_VERSION="3.6.2"
 MAVEN_DEFAULT_OPTS="-DskipTests -DoutputFile=target/mvn-dependency-list.log"
-MAVEN_DEFAULT_GOALS="clean dependency:list install"
+MAVEN_DEFAULT_GOALS="clean install"
 
 ########################################################################################################################
 
@@ -119,12 +119,18 @@ export MAVEN_OPTS="-Xmx1024m"
 ########################################################################################################################
 
 echo "Executing Maven"
-echo "$ ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}"
+echo "$ ${maven_executable} ${maven_opts} ${maven_goals}"
 
 # shellcheck disable=SC2086
 # We must not quote the arguments here since maven_opts, internal_maven_opts, and maven_goals might contain
 # multiple arguments which would be interpreted as one if quoted.
 ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}
+
+########################################################################################################################
+# Generate dependencies list file
+
+# shellcheck disable=SC2086
+${maven_executable} "-DoutputFile=target/mvn-dependency-list.log" ${internal_maven_opts} "dependency:list"
 
 ########################################################################################################################
 
