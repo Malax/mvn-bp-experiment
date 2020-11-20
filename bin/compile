@@ -37,17 +37,19 @@ MAVEN_DEFAULT_GOALS="clean install"
 ########################################################################################################################
 
 # Install OpenJDK by downloading and using heroku-buildpack-jvm-common...
-let start=$(nowms)
+jvm_common_install_start_time=$(nowms)
+
 mkdir -p /tmp/jvm-common
 curl --retry 3 --silent --location "${JVM_COMMON_BUILDPACK}" | tar xzm -C /tmp/jvm-common --strip-components=1
 source /tmp/jvm-common/bin/util
 source /tmp/jvm-common/bin/java
 source /tmp/jvm-common/opt/jdbc.sh
-mtime "jvm-common.install.time" "${start}"
 
-let start=$(nowms)
+mtime "jvm-common.install.time" "${jvm_common_install_start_time}"
+
+jvm_install_start_time=$(nowms)
 install_java_with_overlay "${BUILD_DIR}" "${CACHE_DIR}"
-mtime "jvm.install.time" "${start}"
+mtime "jvm.install.time" "${jvm_install_start_time}"
 
 ########################################################################################################################
 
