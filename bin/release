@@ -8,6 +8,7 @@ BUILD_DIR="${1}"
 source "${BUILDPACK_DIR}/lib/dependencies.sh"
 
 echo "---"
+echo "==="
 
 if dependencies::app_requires_postgres "${BUILD_DIR}"; then
 	cat <<-EOF
