@@ -30,9 +30,8 @@ BPLOG_PREFIX="buildpack.java"
 # for debugging purposes or if they want to use a specific version.
 JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku/jvm.tgz}
 
-# Defaults
-MAVEN_DEFAULT_VERSION="3.6.2"
-MAVEN_DEFAULT_OPTS="-DskipTests -DoutputFile=target/mvn-dependency-list.log"
+# Defaults, can be overridden by MAVEN_CUSTOM_OPTS and MAVEN_CUSTOM_GOALS respectivly.
+MAVEN_DEFAULT_OPTS="-DskipTests"
 MAVEN_DEFAULT_GOALS="clean install"
 
 ########################################################################################################################
@@ -54,7 +53,9 @@ mtime "jvm.install.time" "${start}"
 
 # Install Maven
 if ! maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
-	configured_version=$(maven::get_configured_version "${BUILD_DIR}" "${MAVEN_DEFAULT_VERSION}")
+	configured_version=$(maven::get_configured_version "${BUILD_DIR}" "$(maven::default_version)")
+	mcount "mvn.version.${configured_version}"
+
 	maven_tarball_url=$(maven::tarball_url_for_version "${configured_version}")
 
 	if [[ -z "${maven_tarball_url}" ]]; then
@@ -97,6 +98,7 @@ fi
 
 maven_executable="mvn"
 if maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
+	mcount "mvn.version.wrapper"
 	maven_executable="./mvnw"
 fi
 

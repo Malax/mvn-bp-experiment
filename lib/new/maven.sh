@@ -40,3 +40,7 @@ function maven::app_contains_wrapper() {
 
 	[[ -f "${app_directory}/mvnw" && -f "${app_directory}/.mvn/wrapper/maven-wrapper.properties" ]]
 }
+
+function maven::default_version() {
+	echo "3.6.2"
+}
