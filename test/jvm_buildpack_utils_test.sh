@@ -4,44 +4,44 @@ source "lib/jvm_buildpack_utils.sh"
 
 test_get_properties_file_value() {
 	assertEquals "its_value" "$(
-		get_java_properties_value "custom_key" <<-EOF
+		bputils::get_java_properties_value "custom_key" <<-EOF
 		custom_key = its_value
 		EOF
 	)"
 
 	assertEquals "a value with whitespace in it" "$(
-		get_java_properties_value "custom_key" <<-EOF
+		bputils::get_java_properties_value "custom_key" <<-EOF
 		custom_key = a value with whitespace in it
 		EOF
 	)"
 
 	assertEquals "its_value" "$(
-		get_java_properties_value "custom_key" <<-EOF
+		bputils::get_java_properties_value "custom_key" <<-EOF
 		    custom_key    =    its_value
 		EOF
 	)"
 
 	assertEquals "its_value" "$(
-		get_java_properties_value "custom_key" <<-EOF
+		bputils::get_java_properties_value "custom_key" <<-EOF
 		custom_key=its_value
 		EOF
 	)"
 
 	assertEquals "its_value" "$(
-		get_java_properties_value "custom_key" <<-EOF
+		bputils::get_java_properties_value "custom_key" <<-EOF
 		custom_key:its_value
 		EOF
 	)"
 
 	assertEquals "its_value" "$(
-		get_java_properties_value "custom_key" <<-EOF
+		bputils::get_java_properties_value "custom_key" <<-EOF
 		# This is just a random comment.
 		custom_key = its_value
 		EOF
 	)"
 
 	assertEquals "its_value" "$(
-		get_java_properties_value "custom_key" <<-EOF
+		bputils::get_java_properties_value "custom_key" <<-EOF
 		! Exclamation marks can also be used to start comments
 		custom_key = its_value
 		EOF
@@ -53,7 +53,7 @@ test_get_properties_file_value() {
 	local -r file=$(mktemp)
 	echo "custom_key = a value   " >> "${file}"
 	assertEquals "a value" "$(
-		get_java_properties_value "custom_key" < "${file}"
+		bputils::get_java_properties_value "custom_key" < "${file}"
 	)"
 }
 
