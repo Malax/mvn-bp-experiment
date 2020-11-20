@@ -13,7 +13,7 @@ source "${BUILDPACK_DIR}/vendor/stdlib.sh"
 # shellcheck source=lib/jvm_buildpack_utils.sh
 source "${BUILDPACK_DIR}/lib/jvm_buildpack_utils.sh"
 # shellcheck source=lib/new/maven.sh
-source "${BUILDPACK_DIR}/lib/new/maven.sh"
+source "${BUILDPACK_DIR}/lib/maven.sh"
 
 # Export all environment variables from ENV_DIR, except JAVA_OPTS and JAVA_TOOL_OPTIONS.
 # Both environment variables are set by users to control JVM flags at runtime, not for the

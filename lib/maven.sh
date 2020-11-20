@@ -1,140 +1,46 @@
-#!/usr/bin/env bash
+function maven::get_configured_version() {
+	local -r app_directory="${1:?}"
+	local -r default_version="${2}"
+	local -r system_properties_path="${app_directory}/system.properties"
 
-_mvn_java_opts() {
-  local scope=${1}
-  local home=${2}
-  local cache=${3}
+	local selected_version=""
+	if [[ -f "${system_properties_path}" ]]; then
+		selected_version=$(bputils::get_java_properties_value "maven.version" <"${system_properties_path}")
+	fi
 
-  echo -n "-Xmx1024m"
-  if [ "$scope" = "compile" ]; then
-    echo -n " $MAVEN_JAVA_OPTS"
-  elif [ "$scope" = "test-compile" ]; then
-    echo -n ""
-  fi
-
-  echo -n " -Duser.home=$home -Dmaven.repo.local=$cache/.m2/repository"
+	echo "${selected_version:-$default_version}"
 }
 
-_mvn_cmd_opts() {
-  local scope=${1}
+function maven::is_version_configured() {
+	local -r app_directory="${1:?}"
 
-  if [ "$scope" = "compile" ]; then
-    echo -n "${MAVEN_CUSTOM_OPTS:-"-DskipTests"}"
-    echo -n " ${MAVEN_CUSTOM_GOALS:-"clean dependency:list install"}"
-  elif [ "$scope" = "test-compile" ]; then
-    echo -n "${MAVEN_CUSTOM_GOALS:-"clean dependency:resolve-plugins test-compile"}"
-  else
-    echo -n ""
-  fi
+	[[ $(maven::get_configured_version "${app_directory}" "") != "" ]]
 }
 
-_mvn_settings_opt() {
-  local home="${1}"
-  local mavenInstallDir="${2}"
+function maven::should_use_wrapper_for_app() {
+	local -r app_directory="${1:?}"
 
-  if [ -n "$MAVEN_SETTINGS_PATH" ]; then
-    mcount "mvn.settings.path"
-    echo -n "-s $MAVEN_SETTINGS_PATH"
-  elif [ -n "$MAVEN_SETTINGS_URL" ]; then
-    local settingsXml="${mavenInstallDir}/.m2/settings.xml"
-    mkdir -p $(dirname ${settingsXml})
-    curl --retry 3 --silent --max-time 10 --location $MAVEN_SETTINGS_URL --output ${settingsXml}
-    mcount "mvn.settings.url"
-    if [ -f ${settingsXml} ]; then
-      echo -n "-s ${settingsXml}"
-    else
-      mcount "mvn.settings.url.fail"
-      error "Could not download settings.xml from the URL defined in MAVEN_SETTINGS_URL!"
-      return 1
-    fi
-  elif [ -f ${home}/settings.xml ]; then
-    mcount "mvn.settings.file"
-    echo -n "-s ${home}/settings.xml"
-  else
-    mcount "mvn.settings.default"
-    echo -n ""
-  fi
+	maven::app_contains_wrapper "${app_directory}" && ! maven::is_version_configured "${app_directory}"
 }
 
-has_maven_wrapper() {
-  local home=${1}
-  if [ -f $home/mvnw ] &&
-      [ -f $home/.mvn/wrapper/maven-wrapper.properties ] &&
-      [ -z "$(detect_maven_version $home)" ]; then
-    return 0;
-  else
-    return 1;
-  fi
+function maven::tarball_url_for_version() {
+	local -r maven_version="${1:?}"
+
+	declare -A maven_tarball_urls
+	maven_tarball_urls[3.6.2]="https://lang-jvm.s3.amazonaws.com/maven-3.6.2.tar.gz"
+	maven_tarball_urls[3.5.4]="https://lang-jvm.s3.amazonaws.com/maven-3.5.4.tar.gz"
+	maven_tarball_urls[3.3.9]="https://lang-jvm.s3.amazonaws.com/maven-3.3.9.tar.gz"
+	maven_tarball_urls[3.2.5]="https://lang-jvm.s3.amazonaws.com/maven-3.2.5.tar.gz"
+
+	echo "${maven_tarball_urls["${maven_version}"]}"
 }
 
-get_cache_status() {
-  local cacheDir=${1}
-  if [ ! -d ${cacheDir}/.m2 ]; then
-    echo "not-found"
-  else
-    echo "valid"
-  fi
+function maven::app_contains_wrapper() {
+	local -r app_directory="${1:?}"
+
+	[[ -f "${app_directory}/mvnw" && -f "${app_directory}/.mvn/wrapper/maven-wrapper.properties" ]]
 }
 
-run_mvn() {
-  local scope=${1}
-  local home=${2}
-  local mavenInstallDir=${3}
-
-  mkdir -p ${mavenInstallDir}
-  if has_maven_wrapper $home; then
-    cache_copy ".m2/wrapper" $mavenInstallDir $home
-    chmod +x $home/mvnw
-    local mavenExe="./mvnw"
-    mcount "mvn.version.wrapper"
-  else
-    cd $mavenInstallDir
-    let start=$(nowms)
-    install_maven ${mavenInstallDir} ${home}
-    mtime "mvn.${scope}.time" "${start}"
-    PATH="${mavenInstallDir}/.maven/bin:$PATH"
-    local mavenExe="mvn"
-    cd $home
-  fi
-
-  local mvn_settings_opt="$(_mvn_settings_opt ${home} ${mavenInstallDir})"
-
-  export MAVEN_OPTS="$(_mvn_java_opts ${scope} ${home} ${mavenInstallDir})"
-
-  cd $home
-  local mvnOpts="$(_mvn_cmd_opts ${scope})"
-  status "Executing Maven"
-  echo "$ ${mavenExe} ${mvnOpts}" | indent
-
-  local cache_status="$(get_cache_status ${mavenInstallDir})"
-  let start=$(nowms)
-  ${mavenExe} -DoutputFile=target/mvn-dependency-list.log -B ${mvn_settings_opt} ${mvnOpts} | indent
-
-  if [ "${PIPESTATUS[*]}" != "0 0" ]; then
-    error "Failed to build app with Maven
-We're sorry this build is failing! If you can't find the issue in application code,
-please submit a ticket so we can help: https://help.heroku.com/"
-  fi
-
-  mtime "mvn.${scope}.time" "${start}"
-  mtime "mvn.${scope}.time.cache.${cache_status}" "${start}"
-}
-
-write_mvn_profile() {
-  local home=${1}
-  mkdir -p ${home}/.profile.d
-  cat << EOF > ${home}/.profile.d/maven.sh
-export M2_HOME="\$HOME/.maven"
-export MAVEN_OPTS="$(_mvn_java_opts "test" "\$HOME" "\$HOME")"
-export PATH="\$M2_HOME/bin:\$PATH"
-EOF
-}
-
-remove_mvn() {
-  local home=${1}
-  local mavenInstallDir=${2}
-  if has_maven_wrapper $home; then
-    cache_copy ".m2/wrapper" "$home" "$mavenInstallDir"
-    rm -rf "$home/.m2"
-  fi
+function maven::default_version() {
+	echo "3.6.2"
 }
