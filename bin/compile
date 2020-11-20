@@ -12,8 +12,10 @@ ENV_DIR="${3}"
 source "${BUILDPACK_DIR}/vendor/stdlib.sh"
 # shellcheck source=lib/jvm_buildpack_utils.sh
 source "${BUILDPACK_DIR}/lib/jvm_buildpack_utils.sh"
-# shellcheck source=lib/new/maven.sh
+# shellcheck source=lib/maven.sh
 source "${BUILDPACK_DIR}/lib/maven.sh"
+# shellcheck source=lib/log.sh
+source "${BUILDPACK_DIR}/lib/log.sh"
 
 # Export all environment variables from ENV_DIR, except JAVA_OPTS and JAVA_TOOL_OPTIONS.
 # Both environment variables are set by users to control JVM flags at runtime, not for the
@@ -28,13 +30,13 @@ BPLOG_PREFIX="buildpack.java"
 # for debugging purposes or if they want to use a specific version.
 JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku/jvm.tgz}
 
-# Defaults, can be overridden by MAVEN_CUSTOM_OPTS and MAVEN_CUSTOM_GOALS respectivly.
+# Defaults, can be overridden by MAVEN_CUSTOM_OPTS and MAVEN_CUSTOM_GOALS respectively.
 MAVEN_DEFAULT_OPTS="-DskipTests"
 MAVEN_DEFAULT_GOALS="clean install"
 
 ########################################################################################################################
-
-# Install OpenJDK by downloading and using heroku-buildpack-jvm-common...
+# Download and source https://github.com/heroku/heroku-buildpack-jvm-common for OpenJDK installation
+########################################################################################################################
 jvm_common_install_start_time=$(nowms)
 
 jvm_common_directory=$(mktemp -d)
@@ -46,6 +48,11 @@ set +u # jvm-common uses unset variables
 source "${jvm_common_directory}/bin/util"
 # shellcheck disable=SC1090
 source "${jvm_common_directory}/bin/java"
+
+# jdbc.sh is usually installed as a profile.d script by jvm-common to populate JDBC_DATABASE_* environment
+# variables on dyno startup. We source it here too since some users require JDBC_DATABASE_* env vars during build for
+# i.e. database migrations. We discourage this pattern and recommend to use the release phase instead:
+# https://devcenter.heroku.com/articles/release-phase
 # shellcheck disable=SC1090
 source "${jvm_common_directory}/opt/jdbc.sh"
 
@@ -54,14 +61,15 @@ set -u
 mtime "jvm-common.install.time" "${jvm_common_install_start_time}"
 
 ########################################################################################################################
-
+# Install OpenJDK
+########################################################################################################################
 jvm_install_start_time=$(nowms)
 install_java_with_overlay "${BUILD_DIR}" "${CACHE_DIR}"
 mtime "jvm.install.time" "${jvm_install_start_time}"
 
 ########################################################################################################################
-
 # Install Maven
+########################################################################################################################
 if ! maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
 	configured_version=$(maven::get_configured_version "${BUILD_DIR}" "$(maven::default_version)")
 	mcount "mvn.version.${configured_version}"
@@ -89,23 +97,9 @@ if ! maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
 	PATH="${directory}/.maven/bin:$PATH"
 fi
 
-# Resolve Maven settings.xml file to use:
-settings_file_path=""
-if [[ -n "${MAVEN_SETTINGS_PATH:-}" ]]; then
-	settings_file_path="${MAVEN_SETTINGS_PATH}"
-elif [[ -n "${MAVEN_SETTINGS_URL:-}" ]]; then
-	settings_file_path=$(mktemp)
-	if ! bputils::download_file "${MAVEN_SETTINGS_URL}" "${settings_file_path}"; then
-		cat <<-EOF
-			Could not download settings.xml from the URL defined in MAVEN_SETTINGS_URL:
-			${MAVEN_SETTINGS_URL}
-		EOF
-		exit 1
-	fi
-elif [[ -f "${BUILD_DIR}/settings.xml" ]]; then
-	settings_file_path="${BUILD_DIR}/settings.xml"
-fi
-
+########################################################################################################################
+# Prepare for Maven execution, resolving options and configuration
+########################################################################################################################
 maven_executable="mvn"
 if maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
 	mcount "mvn.version.wrapper"
@@ -115,37 +109,59 @@ fi
 maven_opts="${MAVEN_CUSTOM_OPTS:-$MAVEN_DEFAULT_OPTS}"
 maven_goals="${MAVEN_CUSTOM_GOALS:-$MAVEN_DEFAULT_GOALS}"
 
-if [[ -n "${settings_file_path}" ]]; then
-	maven_opts="${maven_opts} -s ${settings_file_path}"
-fi
-
 # We need to set some options that relate to buildpack implementation internals. Those options must not be overridden
 # by the user via MAVEN_CUSTOM_OPTS for the buildpack to work correctly. We also don't want to show them when we log
 # the Maven command we're running since they might be confusing to the user.
 internal_maven_opts="-B -Duser.home=${BUILD_DIR} -Dmaven.repo.local=${CACHE_DIR}/.m2/repository"
 
-# MAVEN_OPTS control JVM options that are used by Maven itself. Since we know the build environment ahead of time, we
-# can set this to a fixed value that works well.
-export MAVEN_OPTS="-Xmx1024m"
+# Resolve Maven settings.xml file to use:
+settings_file_path=""
+if [[ -n "${MAVEN_SETTINGS_PATH:-}" ]]; then
+	settings_file_path="${MAVEN_SETTINGS_PATH}"
+
+elif [[ -n "${MAVEN_SETTINGS_URL:-}" ]]; then
+	settings_file_path=$(mktemp)
+	if ! bputils::download_file "${MAVEN_SETTINGS_URL}" "${settings_file_path}"; then
+		cat <<-EOF
+			Could not download settings.xml from the URL defined in MAVEN_SETTINGS_URL:
+			${MAVEN_SETTINGS_URL}
+		EOF
+		exit 1
+	fi
+
+elif [[ -f "${BUILD_DIR}/settings.xml" ]]; then
+	settings_file_path="${BUILD_DIR}/settings.xml"
+fi
+
+if [[ -n "${settings_file_path}" ]]; then
+	maven_opts="${maven_opts} -s ${settings_file_path}"
+fi
 
 ########################################################################################################################
+# Execute Maven
+########################################################################################################################
+maven_execution_start_time=$(nowms)
+
+# We measure compilation times and discriminate them by the status of the cache before Maven ran:
 maven_cache_status="not-found"
 if [[ -d "${CACHE_DIR}/.m2" ]]; then
 	maven_cache_status="valid"
 fi
 
-maven_execution_start_time=$(nowms)
-
 echo "Executing Maven"
 echo "$ ${maven_executable} ${maven_opts} ${maven_goals}"
+
+# MAVEN_OPTS control JVM options that are used by Maven itself. Since we know the build environment ahead of time, we
+# can set this to a fixed value that works well.
+export MAVEN_OPTS="-Xmx1024m"
 
 pushd "${BUILD_DIR}" > /dev/null
 
 # We must not quote the arguments here since maven_opts, internal_maven_opts, and maven_goals might contain
 # multiple arguments which would be interpreted as one if quoted.
 # shellcheck disable=SC2086
-if ! ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}; then
-	cat <<-EOF
+if ! ${maven_executable}a ${maven_opts} ${internal_maven_opts} ${maven_goals}; then
+	log::classic::error <<-EOF
 		Failed to build app with Maven
 
 		We're sorry this build is failing! If you can't find the issue in application code,
@@ -160,18 +176,16 @@ mtime "mvn.compile.time" "${maven_execution_start_time}"
 mtime "mvn.compile.time.cache.${maven_cache_status}" "${maven_execution_start_time}"
 
 ########################################################################################################################
-# Generate dependencies list file
-
+# Generate target/mvn-dependency-list.log (For debugging and dep-tracker)
+########################################################################################################################
 pushd "${BUILD_DIR}" > /dev/null
-
 # shellcheck disable=SC2086
 ${maven_executable} "-DoutputFile=target/mvn-dependency-list.log" ${internal_maven_opts} "dependency:list" >/dev/null 2>&1
-
 popd > /dev/null
 
 ########################################################################################################################
-
 # Log statistics about non-Java source files in the application
+########################################################################################################################
 if [[ -n "$(find "${BUILD_DIR}" -type f -name "*.kt")" ]]; then
 	mcount "kotlin.source"
 fi
