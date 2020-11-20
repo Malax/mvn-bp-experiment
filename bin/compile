@@ -75,6 +75,8 @@ if ! has_maven_wrapper "${BUILD_DIR}"; then
 	fi
 
 	echo "==============================="
+	echo "${directory}/"
+	echo "==============================="
 	ls -lah "${directory}/"
 	echo "==============================="
 
