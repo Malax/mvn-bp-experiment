@@ -128,7 +128,7 @@ export MAVEN_OPTS="-Xmx1024m"
 
 ########################################################################################################################
 maven_cache_status="not-found"
-if [[ ! -d "${CACHE_DIR}/.m2" ]]; then
+if [[ -d "${CACHE_DIR}/.m2" ]]; then
 	maven_cache_status="valid"
 fi
 
