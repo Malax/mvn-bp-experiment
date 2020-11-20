@@ -95,6 +95,8 @@ fi
 
 maven_executable="mvn"
 if has_maven_wrapper "${BUILD_DIR}"; then
+	pwd
+	echo "${BUILD_DIR}"
 	maven_executable="./mvnw"
 fi
 
