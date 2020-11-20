@@ -17,6 +17,12 @@ function is_maven_version_configured() {
 	[[ $(detect_maven_version "${app_directory}" "") != "" ]]
 }
 
+function use_maven_wrapper() {
+	local -r app_directory="${1:?}"
+
+	has_maven_wrapper "${app_directory}" && ! is_maven_version_configured "${app_directory}"
+}
+
 function get_maven_tarball_url() {
 	local -r maven_version="${1:?}"
 

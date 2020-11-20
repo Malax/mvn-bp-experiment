@@ -60,7 +60,7 @@ if has_maven_wrapper "${BUILD_DIR}" && is_maven_version_configured "${BUILD_DIR}
 fi
 
 # Install Maven
-if is_maven_version_configured "${BUILD_DIR}" || ! has_maven_wrapper "${BUILD_DIR}"; then
+if ! use_maven_wrapper "${BUILD_DIR}"; then
 	selected_version=$(detect_maven_version "${BUILD_DIR}" "${MAVEN_DEFAULT_VERSION}")
 	maven_tarball_url=$(get_maven_tarball_url "${selected_version}")
 
@@ -103,7 +103,7 @@ elif [[ -f "${BUILD_DIR}/settings.xml" ]]; then
 fi
 
 maven_executable="mvn"
-if has_maven_wrapper "${BUILD_DIR}"; then
+if use_maven_wrapper "${BUILD_DIR}"; then
 	maven_executable="./mvnw"
 fi
 
