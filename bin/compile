@@ -72,13 +72,17 @@ mtime "jvm.install.time" "${jvm_install_start_time}"
 ########################################################################################################################
 if ! maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
 	configured_version=$(maven::get_configured_version "${BUILD_DIR}" "$(maven::default_version)")
+
+	status_pending "Installing Maven ${configured_version}"
 	mcount "mvn.version.${configured_version}"
 
 	maven_tarball_url=$(maven::tarball_url_for_version "${configured_version}")
 
 	if [[ -z "${maven_tarball_url}" ]]; then
-		cat <<-EOF
-			Error, you have defined an unsupported Maven version in the system.properties file.
+		log::classic::error <<-EOF
+			Unsupported Maven version
+
+			You have defined an unsupported Maven version in the system.properties file.
 			The default supported version is ${MAVEN_DEFAULT_VERSION}
 		EOF
 		exit 1
@@ -86,15 +90,19 @@ if ! maven::should_use_wrapper_for_app "${BUILD_DIR}"; then
 
 	directory=$(mktemp -d)
 	if ! bputils::download_and_extract_tarball "${maven_tarball_url}" "${directory}"; then
-		cat <<-EOF
-			Error, could not download and extract Maven distribution. Please try again.
-			If this error persists, please contact support.
+		log::classic::error <<-EOF
+			Maven download failed
+
+			Could not download and extract Maven distribution. Please try again.
+			If this error persists, please contact us: https://help.heroku.com/
 		EOF
 		exit 1
 	fi
 
 	chmod +x "${directory}/.maven/bin/mvn"
 	PATH="${directory}/.maven/bin:$PATH"
+
+	status_done
 fi
 
 ########################################################################################################################
@@ -148,8 +156,8 @@ if [[ -d "${CACHE_DIR}/.m2" ]]; then
 	maven_cache_status="valid"
 fi
 
-echo "Executing Maven"
-echo "$ ${maven_executable} ${maven_opts} ${maven_goals}"
+log::classic:status "Executing Maven"
+echo "$ ${maven_executable} ${maven_opts} ${maven_goals}" | log::indent
 
 # MAVEN_OPTS control JVM options that are used by Maven itself. Since we know the build environment ahead of time, we
 # can set this to a fixed value that works well.
