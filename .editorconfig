@@ -1,0 +1,11 @@
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.sh]
+indent_style = tab
+indent_size = 4
+
+[{bin/build, bin/detect, bin/compile, bin/release, bin/test, bin/test-compile}]
+indent_style = tab
+indent_size = 4

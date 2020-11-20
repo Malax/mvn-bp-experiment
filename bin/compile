@@ -1,26 +1,128 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir> <env-dir>
 
-# fail fast
 set -e
 
-BPLOG_PREFIX="buildpack.java"
-
-BP_DIR=$(cd $(dirname $0)/..; pwd) # absolute path
+BUILDPACK_DIR=$(cd "$(dirname "${0}")/.."; pwd)
 BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
 
-source $BP_DIR/lib/common.sh
-source $BP_DIR/lib/maven.sh
-source <(curl -s --retry 3 -L $BUILDPACK_STDLIB_URL)
+# shellcheck source=vendor/stdlib.sh
+source "${BUILDPACK_DIR}/vendor/stdlib.sh"
+# shellcheck source=lib/jvm_buildpack_utils.sh
+source "${BUILDPACK_DIR}/lib/jvm_buildpack_utils.sh"
+# shellcheck source=lib/new/maven.sh
+source "${BUILDPACK_DIR}/lib/new/maven.sh"
 
-export_env $ENV_DIR "." "JAVA_OPTS|JAVA_TOOL_OPTIONS"
+# Export all environment variables from ENV_DIR, except JAVA_OPTS and JAVA_TOOL_OPTIONS.
+# Both environment variables are set by users to control JVM flags at runtime, not for the
+# build process they have only little control over.
+export_env "${ENV_DIR}" "." "JAVA_OPTS|JAVA_TOOL_OPTIONS"
 
-install_jdk "${BUILD_DIR}" "${CACHE_DIR}"
+# Set buildpack log prefix for metrics logging, used by buildpack stdlib functions like mcount.
+# shellcheck disable=SC2034
+BPLOG_PREFIX="buildpack.java"
 
-[ -n "$(find ${BUILD_DIR} -type f -name "*.kt")" ] && mcount "kotlin.source"
-[ -n "$(find ${BUILD_DIR} -type f -name "*.groovy")" ] && mcount "groovy.source"
+# OpenJDK will be installed using https://github.com/heroku/heroku-buildpack-jvm-common. Users can set a custom URL
+# for debugging purposes or if they want to use a specific version.
+JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku/jvm.tgz}
 
-run_mvn "compile" $BUILD_DIR $CACHE_DIR
-remove_mvn $BUILD_DIR $CACHE_DIR
+# Defaults
+MAVEN_DEFAULT_VERSION="3.6.2"
+MAVEN_DEFAULT_OPTS="-DskipTests"
+MAVEN_DEFAULT_GOALS="clean dependency:list install"
+
+########################################################################################################################
+
+# Install OpenJDK by downloading and using heroku-buildpack-jvm-common...
+let start=$(nowms)
+mkdir -p /tmp/jvm-common
+curl --retry 3 --silent --location "${JVM_COMMON_BUILDPACK}" | tar xzm -C /tmp/jvm-common --strip-components=1
+source /tmp/jvm-common/bin/util
+source /tmp/jvm-common/bin/java
+source /tmp/jvm-common/opt/jdbc.sh
+mtime "jvm-common.install.time" "${start}"
+
+let start=$(nowms)
+install_java_with_overlay "${BUILD_DIR}" "${CACHE_DIR}"
+mtime "jvm.install.time" "${start}"
+
+########################################################################################################################
+
+# Install Maven
+if ! has_maven_wrapper "${BUILD_DIR}"; then
+	selected_version=$(detect_maven_version "${BUILD_DIR}" "${MAVEN_DEFAULT_VERSION}")
+	maven_tarball_url=$(get_maven_tarball_url "${selected_version}")
+
+	if [[ -z "${maven_tarball_url}" ]]; then
+		cat <<-EOF
+			Error, you have defined an unsupported Maven version in the system.properties file.
+			The default supported version is ${MAVEN_DEFAULT_VERSION}
+		EOF
+		exit 1
+	fi
+
+	directory=$(mktemp -d)
+	if ! download_and_extract_tarball "${maven_tarball_url}" "${directory}"; then
+		cat <<-EOF
+			Error, could not download and extract Maven distribution. Please try again.
+			If this error persists, please contact support.
+		EOF
+		exit 1
+	fi
+
+	chmod +x "${directory}/bin/mvn"
+	PATH="${directory}/.maven/bin:$PATH"
+fi
+
+# Resolve Maven settings.xml file to use:
+settings_file_path=""
+if [[ -n "${MAVEN_SETTINGS_PATH}" ]]; then
+	settings_file_path="${MAVEN_SETTINGS_PATH}"
+elif [[ -n "${MAVEN_SETTINGS_URL}" ]]; then
+	settings_file_path=$(mktemp)
+	if ! download_file "${MAVEN_SETTINGS_URL}" "${settings_file_path}"; then
+		cat <<-EOF
+			Could not download settings.xml from the URL defined in MAVEN_SETTINGS_URL:
+			${MAVEN_SETTINGS_URL}
+		EOF
+		exit 1
+	fi
+elif [[ -f "${BUILD_DIR}/settings.xml" ]]; then
+	settings_file_path="${BUILD_DIR}/settings.xml"
+fi
+
+maven_executable="mvn"
+if has_maven_wrapper "${BUILD_DIR}"; then
+	maven_executable="./mvnw"
+fi
+
+maven_opts="${MAVEN_CUSTOM_OPTS:-$MAVEN_DEFAULT_OPTS}"
+maven_goals="${MAVEN_CUSTOM_GOALS:-$MAVEN_DEFAULT_GOALS}"
+
+if [[ -n "${settings_file_path}" ]]; then
+	maven_opts="${maven_opts} -s ${settings_file_path}"
+fi
+
+# We need to set some options that relate to buildpack implementation internals. Those options must not be overridden
+# by the user via MAVEN_CUSTOM_OPTS for the buildpack to work correctly. We also don't want to show them when we log
+# the Maven command we're running since they might be confusing to the user.
+internal_maven_opts="-Duser.home=${BUILD_DIR} -Dmaven.repo.local=${CACHE_DIR}/.m2/repository"
+
+# MAVEN_OPTS control JVM options that are used by Maven itself. Since we know the build environment ahead of time, we
+# can set this to a fixed value that works well.
+export MAVEN_OPTS="-Xmx1024m"
+
+"${maven_executable}" "${maven_opts}" "${internal_maven_opts}" "${maven_goals}"
+
+# Remove(?) Maven
+
+# Log statistics about non-Java source files in the application
+if [[ -n "$(find "${BUILD_DIR}" -type f -name "*.kt")" ]]; then
+	mcount "kotlin.source"
+fi
+
+if [[ -n "$(find "${BUILD_DIR}" -type f -name "*.groovy")" ]]; then
+	mcount "groovy.source"
+fi
