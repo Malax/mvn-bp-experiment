@@ -1,31 +1,38 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
-#BP_DIR=$(cd $(dirname $0)/..; pwd) # absolute path
-#BUILD_DIR=$1
-#
-#source $BP_DIR/lib/frameworks.sh
-#
-#echo "---"
-#
-#if has_postgres $BUILD_DIR; then
-#  cat <<EOF
-#addons:
-#  - heroku-postgresql
-#EOF
-#fi
-#
-#if [ ! -f $BUILD_DIR/Procfile ] && [ -d $BUILD_DIR/target ]; then
-#  cd $BUILD_DIR
-#  for jarFile in $(find target -maxdepth 1 -name "*.jar" -type f); do
-#    if is_spring_boot $BUILD_DIR; then
-#      echo "default_process_types:"
-#      echo "  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jarFile"
-#    elif is_wildfly_swarm $BUILD_DIR; then
-#      echo "default_process_types:"
-#      echo "  web: java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jarFile"
-#    fi
-#    break;
-#  done
-#fi
-#
+BUILDPACK_DIR=$(cd "$(dirname "${0}")/.."; pwd)
+BUILD_DIR="${1}"
+
+# shellcheck source=lib/dependencies.sh
+source "${BUILDPACK_DIR}/lib/dependencies.sh"
+
+echo "---"
+
+if dependencies::app_requires_postgres "${BUILD_DIR}"; then
+	cat <<-EOF
+	addons:
+	  - heroku-postgresql
+	EOF
+fi
+
+if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
+	jar_files=("${BUILD_DIR}"/target/*.jar)
+	jar_file="${jar_files[0]}"
+
+	if [[ -f "${jar_file}" ]]; then
+		if depenencies::has_spring_boot "${BUILD_DIR}"; then
+			cat <<-EOF
+			default_process_types:
+			  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
+			EOF
+		fi
+
+		if depenencies::has_wildfly_swarm "${BUILD_DIR}"; then
+			cat <<-EOF
+			default_process_types:
+			  web: java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file
+			EOF
+		fi
+	fi
+fi

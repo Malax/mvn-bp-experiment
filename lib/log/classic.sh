@@ -1,5 +1,5 @@
 log::classic::error() {
-	# send all of our output to stderr
+	# Send all of our output to stderr
 	exec 1>&2
 
 	# If arguments are given, redirect them to stdin this allows the funtion to be invoked with a string argument,
@@ -7,12 +7,12 @@ log::classic::error() {
 	(($#)) && exec <<<"$@"
 
 	echo
-	echo -n " !     ERROR: $(cat -)" | log::indent no_first_line_indent
+	echo -n " !     ERROR: $(cat -)" | log::classic::indent no_first_line_indent
 	echo
 }
 
 log::classic::warning() {
-	# send all of our output to stderr
+	# Send all of our output to stderr
 	exec 1>&2
 
 	# If arguments are given, redirect them to stdin this allows the funtion to be invoked with a string argument,
@@ -20,12 +20,12 @@ log::classic::warning() {
 	(($#)) && exec <<<"$@"
 
 	echo
-	echo " !     WARNING: $(cat -)" | log::indent no_first_line_indent
+	echo " !     WARNING: $(cat -)" | log::classic::indent no_first_line_indent
 	echo
 }
 
 log::classic::warning_inline() {
-	echo " !     WARNING: $*" | log::indent no_first_line_indent
+	echo " !     WARNING: $*" | log::classic::indent no_first_line_indent
 }
 
 log::classic::status() {
@@ -42,17 +42,17 @@ log::classic::status_done() {
 
 log::classic::notice() {
 	echo
-	echo "NOTICE: $(cat -)" | log::indent
+	echo "NOTICE: $(cat -)" | log::classic::indent
 	echo
 }
 
 log::classic::notice_inline() {
-	echo "NOTICE: $*" | log::indent
+	echo "NOTICE: $*" | log::classic::indent
 }
 
-log::indent() {
+log::classic::indent() {
 	# sed -l basically makes sed replace and buffer through stdin to stdout so you get updates while the command runs
-	# and dont wait for the end e.g. npm install | log::indent
+	# and dont wait for the end e.g. npm install | log::classic::indent
 
 	# If any value (e.g. a non-empty string, or true, or false) is given for the first argument, this will act as a flag
 	# indicating we shouldn't indent the first line; we use :+ to tell SED accordingly if that parameter is set,

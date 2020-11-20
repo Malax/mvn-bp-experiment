@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-is_spring_boot() {
+dependencies::has_spring_boot() {
 	local app_directory=${1:?}
 
 	[[ -f "${app_directory}/pom.xml" ]] &&
@@ -8,13 +8,13 @@ is_spring_boot() {
 		[[ -n "$(grep "<artifactId>spring-boot" "${app_directory}/pom.xml")" ]]
 }
 
-is_wildfly_swarm() {
+dependencies::has_wildfly_swarm() {
 	local app_directory=${1:?}
 	[[ -f "${app_directory}/pom.xml" ]] &&
 		[[ -n "$(grep "<groupId>org.wildfly.swarm" "${app_directory}/pom.xml)")" ]]
 }
 
-has_postgres() {
+dependencies::app_requires_postgres() {
 	local app_directory=${1:?}
 
 	[[ -f "${app_directory}/pom.xml" ]] &&
