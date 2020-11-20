@@ -1,6 +1,6 @@
 function detect_maven_version() {
 	local -r app_directory="${1:?}"
-	local -r default_version="${2:?}"
+	local -r default_version="${2}"
 	local -r system_properties_path="${app_directory}/system.properties"
 
 	local selected_version=""
