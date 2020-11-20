@@ -42,12 +42,14 @@ jvm_common_install_start_time=$(nowms)
 jvm_common_directory=$(mktemp -d)
 bputils::download_and_extract_tarball "${JVM_COMMON_BUILDPACK}" "${jvm_common_directory}"
 
+set +u
 # shellcheck disable=SC1090
 source "${jvm_common_directory}/bin/util"
 # shellcheck disable=SC1090
 source "${jvm_common_directory}/bin/java"
 # shellcheck disable=SC1090
 source "${jvm_common_directory}/opt/jdbc.sh"
+set -u
 
 mtime "jvm-common.install.time" "${jvm_common_install_start_time}"
 
