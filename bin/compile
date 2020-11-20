@@ -74,6 +74,10 @@ if ! has_maven_wrapper "${BUILD_DIR}"; then
 		exit 1
 	fi
 
+	echo "==============================="
+	ls -lah "${directory}/"
+	echo "==============================="
+
 	chmod +x "${directory}/bin/mvn"
 	PATH="${directory}/.maven/bin:$PATH"
 fi
