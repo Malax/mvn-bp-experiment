@@ -156,7 +156,7 @@ if [[ -d "${CACHE_DIR}/.m2" ]]; then
 	maven_cache_status="valid"
 fi
 
-log::classic:status "Executing Maven"
+log::classic::status "Executing Maven"
 echo "$ ${maven_executable} ${maven_opts} ${maven_goals}" | log::indent
 
 # MAVEN_OPTS control JVM options that are used by Maven itself. Since we know the build environment ahead of time, we
