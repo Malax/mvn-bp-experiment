@@ -114,7 +114,7 @@ internal_maven_opts="-Duser.home=${BUILD_DIR} -Dmaven.repo.local=${CACHE_DIR}/.m
 # can set this to a fixed value that works well.
 export MAVEN_OPTS="-Xmx1024m"
 
-"${maven_executable}" "${maven_opts}" "${internal_maven_opts}" "${maven_goals}"
+${maven_executable} "${maven_opts}" "${internal_maven_opts}" "${maven_goals}"
 
 # Remove(?) Maven
 
