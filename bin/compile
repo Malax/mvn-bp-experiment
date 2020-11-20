@@ -39,11 +39,15 @@ MAVEN_DEFAULT_GOALS="clean install"
 # Install OpenJDK by downloading and using heroku-buildpack-jvm-common...
 jvm_common_install_start_time=$(nowms)
 
-mkdir -p /tmp/jvm-common
-curl --retry 3 --silent --location "${JVM_COMMON_BUILDPACK}" | tar xzm -C /tmp/jvm-common --strip-components=1
-source /tmp/jvm-common/bin/util
-source /tmp/jvm-common/bin/java
-source /tmp/jvm-common/opt/jdbc.sh
+jvm_common_directory=$(mktemp -d)
+bputils::download_and_extract_tarball "${JVM_COMMON_BUILDPACK}" "${jvm_common_directory}"
+
+# shellcheck disable=SC1090
+source "${jvm_common_directory}/bin/util"
+# shellcheck disable=SC1090
+source "${jvm_common_directory}/bin/java"
+# shellcheck disable=SC1090
+source "${jvm_common_directory}/opt/jdbc.sh"
 
 mtime "jvm-common.install.time" "${jvm_common_install_start_time}"
 
