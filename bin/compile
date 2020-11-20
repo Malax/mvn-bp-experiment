@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir> <env-dir>
 
-set -e
+set -euo pipefail
 
 BUILDPACK_DIR=$(cd "$(dirname "${0}")/.."; pwd)
 BUILD_DIR=$1

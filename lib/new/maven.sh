@@ -37,5 +37,6 @@ function maven::tarball_url_for_version() {
 
 function maven::app_contains_wrapper() {
 	local -r app_directory="${1:?}"
+
 	[[ -f "${app_directory}/mvnw" && -f "${app_directory}/.mvn/wrapper/maven-wrapper.properties" ]]
 }
