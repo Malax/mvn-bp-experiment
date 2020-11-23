@@ -11,6 +11,7 @@ dependencies::has_spring_boot() {
 dependencies::has_wildfly_swarm() {
 	#local app_directory=${1:?}
 	#[[ -f "${app_directory}/pom.xml" ]] && [[ -n "$(grep "<groupId>org.wildfly.swarm" "${app_directory}/pom.xml)")" ]]
+	true
 }
 
 dependencies::app_requires_postgres() {
