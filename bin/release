@@ -12,11 +12,15 @@ source "${BUILDPACK_DIR}/lib/dependencies.sh"
 
 echo "---"
 
-if ! dependencies::has_spring_boot "${BUILD_DIR}"; then
-	cat <<-EOF
-		default_process_types:
-		  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar jar.jar
-	EOF
+if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
+	jar_files=("${BUILD_DIR}"/target/*.jar)
+	jar_file="${jar_files[0]}"
+	if ! dependencies::has_spring_boot "${BUILD_DIR}"; then
+		cat <<-EOF
+			default_process_types:
+			  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
+		EOF
+	fi
 fi
 
 #echo "---"
