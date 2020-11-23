@@ -22,17 +22,19 @@ if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
 
 	if [[ -f "${jar_file}" ]]; then
 		if dependencies::has_spring_boot "${BUILD_DIR}"; then
-			cat <<-EOF
-			default_process_types:
-			  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
-			EOF
+			#cat <<-EOF
+			#default_process_types:
+			#  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
+			#EOF
+			true
 		fi
 
 		if dependencies::has_wildfly_swarm "${BUILD_DIR}"; then
-			cat <<-EOF
-			default_process_types:
-			  web: java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file
-			EOF
+			#cat <<-EOF
+			#default_process_types:
+			#  web: java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file
+			#EOF
+			true
 		fi
 	fi
 fi
