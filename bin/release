@@ -38,5 +38,4 @@ if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
 			EOF
 		fi
 	fi
-	true
 fi
