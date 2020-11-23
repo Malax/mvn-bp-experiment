@@ -16,10 +16,10 @@ if dependencies::app_requires_postgres "${BUILD_DIR}"; then
 	EOF
 fi
 
-#if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
-#	jar_files=("${BUILD_DIR}"/target/*.jar)
-#	jar_file="${jar_files[0]}"
-#
+if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
+	jar_files=("${BUILD_DIR}"/target/*.jar)
+	jar_file="${jar_files[0]}"
+
 #	if [[ -f "${jar_file}" ]]; then
 #		if dependencies::has_spring_boot "${BUILD_DIR}"; then
 #			#cat <<-EOF
@@ -37,5 +37,6 @@ fi
 #			true
 #		fi
 #	fi
-#fi
+	true
+fi
 #
