@@ -24,11 +24,6 @@ source "${BUILDPACK_DIR}/lib/log/classic.sh"
 # shellcheck source=lib/dependencies.sh
 source "${BUILDPACK_DIR}/lib/dependencies.sh"
 
-if dependencies::app_requires_postgres "${BUILD_DIR}"; then
-	echo "LOL"
-fi
-
-
 # Export all environment variables from ENV_DIR, except JAVA_OPTS and JAVA_TOOL_OPTIONS.
 # Both environment variables are set by users to control JVM flags at runtime, not for the
 # build process they have only little control over.
