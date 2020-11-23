@@ -1,24 +1,41 @@
 #!/usr/bin/env bash
 
-if [ -n "${CNB_STACK_ID:-}" ]; then
-  buildDir="$(pwd)"
-  name="Maven"
+set -euo pipefail
+
+BUILDPACK_DIR=$(
+	cd "$(dirname "${0}")/.." || {
+		echo "Could not determine BUILDPACK_DIR: 'cd' failed!"
+		exit 1
+	}
+	pwd
+)
+
+# shellcheck source=lib/jvm_buildpack_utils.sh
+source "${BUILDPACK_DIR}/lib/jvm_buildpack_utils.sh"
+
+if bputils::runs_as_cnb; then
+	BUILD_DIR="$(pwd)"
 else
-  buildDir="${1:?}"
-  name="Java"
+	BUILD_DIR="${1}"
 fi
 
-if [ -f "${buildDir}/pom.xml" ] ||
-    [ -f "${buildDir}/pom.atom" ] ||
-    [ -f "${buildDir}/pom.clj" ] ||
-    [ -f "${buildDir}/pom.groovy" ] ||
-    [ -f "${buildDir}/pom.rb" ] ||
-    [ -f "${buildDir}/pom.scala" ] ||
-    [ -f "${buildDir}/pom.yaml" ] ||
-    [ -f "${buildDir}/pom.yml" ] ; then
-  echo "$name"
-  exit 0
+if [[ -f "${BUILD_DIR}/pom.xml" ]] ||
+	[[ -f "${BUILD_DIR}/pom.atom" ]] ||
+	[[ -f "${BUILD_DIR}/pom.clj" ]] ||
+	[[ -f "${BUILD_DIR}/pom.groovy" ]] ||
+	[[ -f "${BUILD_DIR}/pom.rb" ]] ||
+	[[ -f "${BUILD_DIR}/pom.scala" ]] ||
+	[[ -f "${BUILD_DIR}/pom.yaml" ]] ||
+	[[ -f "${BUILD_DIR}/pom.yml" ]]; then
+
+	if bputils::runs_as_cnb; then
+		echo "Maven"
+	else
+		echo "Java"
+	fi
+
+	exit 0
 else
-  (>&2 echo "Could not find a pom.xml file! Please check that it exists and is committed to Git.")
-  exit 1
+	(echo >&2 "Could not find a pom.xml file! Please check that it exists and is committed to Git.")
+	exit 1
 fi

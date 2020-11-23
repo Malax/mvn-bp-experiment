@@ -4,7 +4,10 @@
 set -euo pipefail
 
 BUILDPACK_DIR=$(
-	cd "$(dirname "${0}")/.." || { echo "Could not determine BUILDPACK_DIR: 'cd' failed!"; exit 1; }
+	cd "$(dirname "${0}")/.." || {
+		echo "Could not determine BUILDPACK_DIR: 'cd' failed!"
+		exit 1
+	}
 	pwd
 )
 
@@ -20,9 +23,6 @@ source "${BUILDPACK_DIR}/lib/jvm_buildpack_utils.sh"
 source "${BUILDPACK_DIR}/lib/maven.sh"
 # shellcheck source=lib/log/classic.sh
 source "${BUILDPACK_DIR}/lib/log/classic.sh"
-
-# shellcheck source=lib/dependencies.sh
-source "${BUILDPACK_DIR}/lib/dependencies.sh"
 
 # Export all environment variables from ENV_DIR, except JAVA_OPTS and JAVA_TOOL_OPTIONS.
 # Both environment variables are set by users to control JVM flags at runtime, not for the
@@ -170,7 +170,7 @@ echo "$ ${maven_executable} ${maven_opts} ${maven_goals}" | log::classic::indent
 # can set this to a fixed value that works well.
 export MAVEN_OPTS="-Xmx1024m"
 
-pushd "${BUILD_DIR}" > /dev/null
+pushd "${BUILD_DIR}" >/dev/null
 
 # We must not quote the arguments here since maven_opts, internal_maven_opts, and maven_goals might contain
 # multiple arguments which would be interpreted as one if quoted.
@@ -185,7 +185,7 @@ if ! ${maven_executable} ${maven_opts} ${internal_maven_opts} ${maven_goals}; th
 	exit 1
 fi
 
-popd > /dev/null
+popd >/dev/null
 
 mtime "mvn.compile.time" "${maven_execution_start_time}"
 mtime "mvn.compile.time.cache.${maven_cache_status}" "${maven_execution_start_time}"
@@ -193,10 +193,13 @@ mtime "mvn.compile.time.cache.${maven_cache_status}" "${maven_execution_start_ti
 ########################################################################################################################
 # Generate target/mvn-dependency-list.log (For debugging and dep-tracker)
 ########################################################################################################################
-pushd "${BUILD_DIR}" > /dev/null
+pushd "${BUILD_DIR}" >/dev/null
+
 # shellcheck disable=SC2086
-${maven_executable} "-DoutputFile=target/mvn-dependency-list.log" ${internal_maven_opts} "dependency:list" >/dev/null 2>&1
-popd > /dev/null
+${maven_executable} ${internal_maven_opts} \
+	"-DoutputFile=target/mvn-dependency-list.log" "dependency:list" >/dev/null 2>&1
+
+popd >/dev/null
 
 ########################################################################################################################
 # Log statistics about non-Java source files in the application
