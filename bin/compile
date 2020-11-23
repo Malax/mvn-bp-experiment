@@ -3,7 +3,11 @@
 
 set -euo pipefail
 
-BUILDPACK_DIR=$(cd "$(dirname "${0}")/.."; pwd)
+BUILDPACK_DIR=$(
+	cd "$(dirname "${0}")/.." || { echo "Could not determine BUILDPACK_DIR: 'cd' failed!"; exit 1; }
+	pwd
+)
+
 BUILD_DIR="${1}"
 CACHE_DIR="${2}"
 ENV_DIR="${3}"
