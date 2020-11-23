@@ -16,25 +16,26 @@ if dependencies::app_requires_postgres "${BUILD_DIR}"; then
 	EOF
 fi
 
-if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
-	jar_files=("${BUILD_DIR}"/target/*.jar)
-	jar_file="${jar_files[0]}"
-
-	if [[ -f "${jar_file}" ]]; then
-		if dependencies::has_spring_boot "${BUILD_DIR}"; then
-			#cat <<-EOF
-			#default_process_types:
-			#  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
-			#EOF
-			true
-		fi
-
-		if dependencies::has_wildfly_swarm "${BUILD_DIR}"; then
-			#cat <<-EOF
-			#default_process_types:
-			#  web: java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file
-			#EOF
-			true
-		fi
-	fi
-fi
+#if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
+#	jar_files=("${BUILD_DIR}"/target/*.jar)
+#	jar_file="${jar_files[0]}"
+#
+#	if [[ -f "${jar_file}" ]]; then
+#		if dependencies::has_spring_boot "${BUILD_DIR}"; then
+#			#cat <<-EOF
+#			#default_process_types:
+#			#  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
+#			#EOF
+#			true
+#		fi
+#
+#		if dependencies::has_wildfly_swarm "${BUILD_DIR}"; then
+#			#cat <<-EOF
+#			#default_process_types:
+#			#  web: java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file
+#			#EOF
+#			true
+#		fi
+#	fi
+#fi
+#
