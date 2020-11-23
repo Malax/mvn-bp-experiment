@@ -10,12 +10,13 @@ BUILD_DIR="${1}"
 # shellcheck source=lib/dependencies.sh
 source "${BUILDPACK_DIR}/lib/dependencies.sh"
 
+echo "---"
+
 if dependencies::has_spring_boot "${BUILD_DIR}"; then
 	cat <<-EOF
 		default_process_types:
 		  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar jar.jar
 	EOF
-	true
 fi
 
 #echo "---"
