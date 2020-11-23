@@ -127,7 +127,6 @@ mtime() {
     local start="${2}"
     local end="${3:-$(nowms)}"
 
-    echo -n "mtime(): "
     echo "${key} ${start} ${end}" | awk '{ printf "measure#%s=%.3f\n", $1, ($3 - $2)/1000 }'
 
     echo "${key} ${start} ${end}" | awk '{ printf "measure#%s=%.3f\n", $1, ($3 - $2)/1000 }' >> ${BUILDPACK_LOG_FILE}
