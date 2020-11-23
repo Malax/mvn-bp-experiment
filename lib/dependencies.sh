@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 
 dependencies::has_spring_boot() {
-	local app_directory=${1:?}
+	local -r app_directory=${1:?}
+	local -r pom_path="${app_directory}/pom.xml"
 
-	[[ -f "${app_directory}/pom.xml" ]] &&
-		[[ -n "$(grep "<groupId>org.springframework.boot" "${app_directory}/pom.xml")" ]] &&
-		[[ -n "$(grep "<artifactId>spring-boot" "${app_directory}/pom.xml")" ]]
+	[[ -f "${pom_path}" ]] &&
+		[[ -n "$(grep "<groupId>org.springframework.boot" "${pom_path}")" ]] &&
+		[[ -n "$(grep "<artifactId>spring-boot" "${pom_path}")" ]]
 }
 
 dependencies::has_wildfly_swarm() {
-	local app_directory=${1:?}
-	[[ -f "${app_directory}/pom.xml" ]] && [[ -n "$(grep "<groupId>org.wildfly.swarm" "${app_directory}/pom.xml")" ]]
+	local -r app_directory=${1:?}
+	local -r pom_path="${app_directory}/pom.xml"
+
+	[[ -f "${pom_path}" ]] && [[ -n "$(grep "<groupId>org.wildfly.swarm" "${pom_path}")" ]]
 }
 
 dependencies::app_requires_postgres() {
-	local app_directory=${1:?}
+	local -r app_directory=${1:?}
+	local -r pom_path="${app_directory}/pom.xml"
 
-	[[ -f "${app_directory}/pom.xml" ]] &&
+	[[ -f "${pom_path}" ]] &&
 		{
-			[[ -n "$(grep "<groupId>org.postgresql" "${app_directory}/pom.xml")" ]] ||
-				[[ -n "$(grep "<groupId>postgresql" "${app_directory}/pom.xml")" ]] ||
-				[[ -n "$(grep "<groupId>com.impossibl.pgjdbc-ng" "${app_directory}/pom.xml")" ]];
+			[[ -n "$(grep "<groupId>org.postgresql" "${pom_path}")" ]] ||
+				[[ -n "$(grep "<groupId>postgresql" "${pom_path}")" ]] ||
+				[[ -n "$(grep "<groupId>com.impossibl.pgjdbc-ng" "${pom_path}")" ]]
 		}
 }

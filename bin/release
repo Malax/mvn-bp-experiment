@@ -2,9 +2,10 @@
 # bin/release <build-dir>
 
 BUILDPACK_DIR=$(
-	cd "$(dirname "${0}")/.."
+	cd "$(dirname "${0}")/.." || { echo "Could not determine BUILDPACK_DIR: 'cd' failed!"; exit 1; }
 	pwd
 )
+
 BUILD_DIR="${1}"
 
 # shellcheck source=lib/dependencies.sh
