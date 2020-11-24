@@ -22,7 +22,7 @@ fi
 
 if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
 	jar_files=("${BUILD_DIR}"/target/*.jar)
-	jar_file="${jar_files[0]}"
+	jar_file=$(realpath "${jar_files[0]}" --relative-to "${APP_DIR}")
 
 	if [[ -f "${jar_file}" ]]; then
 		if dependencies::has_spring_boot "${BUILD_DIR}"; then

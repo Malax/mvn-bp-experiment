@@ -158,12 +158,13 @@ ${maven_executable} ${internal_maven_opts} \
 # Generate launch.toml
 ########################################################################################################################
 if [[ ! -f "${APP_DIR}/Procfile" ]]; then
+	launch_toml_path="${LAYERS_DIR}/launch.toml"
 	jar_files=("${APP_DIR}"/target/*.jar)
-	jar_file="${jar_files[0]}"
+	jar_file=$(realpath "${jar_files[0]}" --relative-to "${APP_DIR}")
 
 	if [[ -f "${jar_file}" ]]; then
 		if dependencies::has_spring_boot "${APP_DIR}"; then
-			cat > "${LAYERS_DIR}/launch.toml" <<-EOF
+			cat > "${launch_toml_path}" <<-EOF
 				[[processes]]
 				type = web
 				command = java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
@@ -171,7 +172,7 @@ if [[ ! -f "${APP_DIR}/Procfile" ]]; then
 		fi
 
 		if dependencies::has_wildfly_swarm "${APP_DIR}"; then
-			cat > "${LAYERS_DIR}/launch.toml" <<-EOF
+			cat > "${launch_toml_path}" <<-EOF
 				[[processes]]
 				type = web
 				command = java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file
