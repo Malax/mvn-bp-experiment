@@ -13,7 +13,7 @@
 - Check that there is no Maven residue in app directory
     - With Wrapper
     - Without Wrapper
-- Check `JDBC_DATABASE_*` env var support
+- Check `JDBC_DATABASE_*` env var support during build
 - Maven `settings.xml` support:
     - `MAVEN_SETTINGS_URL` support
         - Check error case with `404` urls

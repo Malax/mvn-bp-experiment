@@ -27,7 +27,8 @@ jobs:
       - image: circleci/ruby:2.7
     environment:
       HEROKU_TEST_STACK: << parameters.heroku-stack >>
-      HATCHET_BUILDPACK_BASE: https://github.com/heroku/heroku-buildpack-java
+      #HATCHET_BUILDPACK_BASE: https://github.com/heroku/heroku-buildpack-java
+      HATCHET_BUILDPACK_BASE: https://github.com/malax/mvn-bp-experiment
       HATCHET_APP_LIMIT: 100
       HATCHET_EXPENSIVE_MODE: 1
       PARALLEL_SPLIT_TEST_PROCESSES: 8
