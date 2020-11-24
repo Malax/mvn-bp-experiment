@@ -2,7 +2,10 @@
 # bin/release <build-dir>
 
 BUILDPACK_DIR=$(
-	cd "$(dirname "${0}")/.." || { echo "Could not determine BUILDPACK_DIR: 'cd' failed!"; exit 1; }
+	cd "$(dirname "${0}")/.." || {
+		echo "Could not determine BUILDPACK_DIR: 'cd' failed!"
+		exit 1
+	}
 	pwd
 )
 
@@ -15,27 +18,29 @@ echo "---"
 
 if dependencies::app_requires_postgres "${BUILD_DIR}"; then
 	cat <<-EOF
-	addons:
-	  - heroku-postgresql
+		addons:
+		  - heroku-postgresql
 	EOF
 fi
 
 if [[ ! -f "${BUILD_DIR}/Procfile" ]]; then
 	jar_files=("${BUILD_DIR}"/target/*.jar)
-	jar_file=$(realpath "${jar_files[0]}" --relative-to "${APP_DIR}")
+	jar_file="${jar_files[0]}"
 
 	if [[ -f "${jar_file}" ]]; then
+		jar_file_relative_path=$(realpath "${jar_file}" --relative-to "${BUILD_DIR}")
+
 		if dependencies::has_spring_boot "${BUILD_DIR}"; then
 			cat <<-EOF
-			default_process_types:
-			  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
+				default_process_types:
+				  web: java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file_relative_path
 			EOF
 		fi
 
 		if dependencies::has_wildfly_swarm "${BUILD_DIR}"; then
 			cat <<-EOF
-			default_process_types:
-			  web: java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file
+				default_process_types:
+				  web: java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file_relative_path
 			EOF
 		fi
 	fi
