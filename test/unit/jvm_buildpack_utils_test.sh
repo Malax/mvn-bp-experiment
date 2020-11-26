@@ -47,13 +47,19 @@ test_get_properties_file_value() {
 		EOF
 	)"
 
+	local -r no_trailing_newline_properties_file=$(mktemp)
+	echo -n "custom_key = its_value" >> "${no_trailing_newline_properties_file}"
+	assertEquals "its_value" "$(
+		bputils::get_java_properties_value "custom_key" <"${no_trailing_newline_properties_file}"
+	)"
+
 	# Besides testing the function with a file, the file also has multiple trailing spaces at the end
 	# of the value. We could test this case without a file as well, but might run into issues where editors
 	# remove trailing whitespace. Putting them into a file is just more robust.
-	local -r file=$(mktemp)
-	echo "custom_key = a value   " >> "${file}"
+	local -r trailing_spaces_properties_file=$(mktemp)
+	echo "custom_key = a value   " >> "${trailing_spaces_properties_file}"
 	assertEquals "a value" "$(
-		bputils::get_java_properties_value "custom_key" < "${file}"
+		bputils::get_java_properties_value "custom_key" < "${trailing_spaces_properties_file}"
 	)"
 }
 

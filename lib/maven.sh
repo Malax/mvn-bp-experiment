@@ -11,7 +11,7 @@ function maven::tarball_url_for_version() {
 	maven_tarball_urls[3.3.9]="https://lang-jvm.s3.amazonaws.com/maven-3.3.9.tar.gz"
 	maven_tarball_urls[3.2.5]="https://lang-jvm.s3.amazonaws.com/maven-3.2.5.tar.gz"
 
-	echo "${maven_tarball_urls["${maven_version}"]}"
+	echo "${maven_tarball_urls["${maven_version}"]:-}"
 }
 
 function maven::get_configured_version() {

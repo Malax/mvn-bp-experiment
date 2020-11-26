@@ -131,7 +131,7 @@ log::cnb::status "Executing Maven"
 echo "$ ${maven_executable} ${maven_opts} ${maven_goals}" | log::cnb::indent
 
 # MAVEN_OPTS control JVM options that are used by Maven itself. To maintain backwards compatibility with the v2 Heroku
-# buildpack, the amount of memory is set to 1GB.
+# buildpack, the amount of memory is set to 1GB for now.
 export MAVEN_OPTS="-Xmx1024m"
 
 # We must not quote the arguments here since maven_opts, internal_maven_opts, and maven_goals might contain

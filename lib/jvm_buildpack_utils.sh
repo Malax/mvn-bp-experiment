@@ -10,7 +10,9 @@ bputils::get_java_properties_value() {
 	local -r regex="^ *([^= ]*)[=: ]+(.*)$"
 
 	local line
-	while IFS="" read -r line; do
+	# If the last line is not terminated by a newline this loop will not run for the last line because `read` will fail.
+	# However, it still populates $line. We can use this to run the loop's body for stray last lines as well.
+	while IFS="" read -r line || [[ -n "${line}" ]]; do
 		if [[ "${line}" =~ $regex && ${BASH_REMATCH[1]} == "${key}" ]]; then
 			# shellcheck disable=SC2001
 			echo "${BASH_REMATCH[2]}" | sed -e 's/[[:space:]]*$//'

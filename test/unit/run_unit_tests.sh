@@ -2,7 +2,7 @@
 
 # TODO: Run all tests, but remember if any failed and exit with non-zero as well.
 
-for file in ./test/*_test.sh; do
+for file in ./test/unit/*_test.sh; do
 	echo "======================================================"
 	echo "${file}"
 	echo "======================================================"

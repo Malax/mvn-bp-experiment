@@ -2,14 +2,11 @@ require_relative "spec_helper"
 
 describe "Heroku's Java buildpack" do
 
-  it "spring boot thing" do
-    Hatchet::Runner.new("test/spec/fixtures/buildpack-java-spring-boot-test", stack: ENV["HEROKU_TEST_STACK"]).tap do |app|
-      app.before_deploy do
-        set_java_version(DEFAULT_OPENJDK_VERSION)
-      end
-
+  it "Spring Boot default types" do
+    Hatchet::Runner.new("test/fixtures/buildpack-java-spring-boot-test", stack: ENV["HEROKU_TEST_STACK"]).tap do |app|
       app.deploy do
-        expect(app.output).to include("what")
+        expect(app.output).to include("Procfile declares types     -> (none)")
+        expect(app.output).to include("Default types for buildpack -> web")
       end
     end
   end
