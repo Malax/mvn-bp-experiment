@@ -3,6 +3,9 @@ require "open3"
 require "securerandom"
 require "docker"
 
+
+SPEED_IT_UP=false
+
 def with_temporary_app_from_fixture(name)
   Dir.mktmpdir do |temporary_fixture_dir|
     FileUtils.copy_entry "test/fixtures/#{name}", temporary_fixture_dir
@@ -71,8 +74,8 @@ end
 
 def pack_build(app_dir, image_name: nil, buildpacks: [:this], env: {}, exception_on_failure: true)
   if image_name == nil
-    # image_name="cnb_test_" + SecureRandom.hex(10)
-    image_name="cnb_test_fffffffffa"
+    image_name="cnb_test_fffffffffa" if SPEED_IT_UP
+    image_name="cnb_test_" + SecureRandom.hex(10) unless SPEED_IT_UP
   end
 
   buildpack_list=buildpacks
