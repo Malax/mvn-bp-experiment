@@ -94,7 +94,12 @@
             </goals>
             <phase>package</phase>
             <configuration>
-              <message>[BUILDPACK INTEGRATION TEST - MAVEN VERSION] ${maven.version}</message>
+              <message>${line.separator}
+[BUILDPACK INTEGRATION TEST - MAVEN VERSION] ${maven.version}
+[BUILDPACK INTEGRATION TEST - JDBC_DATABASE_URL] ${env.JDBC_DATABASE_URL}
+[BUILDPACK INTEGRATION TEST - JDBC_DATABASE_USERNAME] ${env.JDBC_DATABASE_USERNAME}
+[BUILDPACK INTEGRATION TEST - JDBC_DATABASE_PASSWORD] ${env.JDBC_DATABASE_PASSWORD}
+              </message>
             </configuration>
           </execution>
         </executions>

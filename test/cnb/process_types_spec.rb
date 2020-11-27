@@ -2,12 +2,16 @@ require_relative "spec_helper"
 
 describe "Heroku's Maven Cloud Native Buildpack" do
   context "for a Spring Boot app" do
-    it "will automatically add a web process type for that app" do
-    end
-  end
-
-  context "for a Wildfly Swarm app" do
-    it "will automatically add a web process type for that app" do
+    it "will automatically add a process type for that app" do
+      with_temporary_app_from_fixture("buildpack-java-spring-boot-test") do |app_dir|
+        # Note the missing Procfile buildpack in the list of buildpacks
+        pack_build(app_dir, buildpacks: ["heroku/jvm", :this]) do |pack_result|
+          pack_result.start_container(expose_ports: 8080) do |container|
+            response = Excon.get("http://localhost:#{container.get_host_port_for(8080)}/", :idempotent => true, :retry_limit => 5, :retry_interval => 1)
+            expect(response.body).to eq("Hello from Spring Boot!")
+          end
+        end
+      end
     end
   end
 end

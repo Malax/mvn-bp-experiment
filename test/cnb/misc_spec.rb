@@ -82,7 +82,7 @@ describe "Heroku's Maven Cloud Native Buildpack" do
     end
   end
 
-  it "will not log internal Maven options and goals", :focus => true do
+  it "will not log internal Maven options and goals" do
     with_temporary_app_from_fixture("simple-http-service") do |app_dir|
       pack_build(app_dir, buildpacks: ["heroku/jvm", :this, "heroku/procfile"]) do |pack_result|
         expect(pack_result.stdout).to_not include("-Dmaven.repo.local=")

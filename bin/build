@@ -12,8 +12,10 @@ source "${CNB_BUILDPACK_DIR}/lib/jvm_buildpack_utils.sh"
 source "${CNB_BUILDPACK_DIR}/lib/maven.sh"
 # shellcheck source=lib/dependencies.sh
 source "${CNB_BUILDPACK_DIR}/lib/dependencies.sh"
-# shellcheck source=lib/log/classic.sh
+# shellcheck source=lib/log/cnb.sh
 source "${CNB_BUILDPACK_DIR}/lib/log/cnb.sh"
+# shellcheck source=lib/jdbc.sh
+source "${CNB_BUILDPACK_DIR}/lib/jdbc.sh"
 
 # Defaults, can be overridden by MAVEN_CUSTOM_OPTS and MAVEN_CUSTOM_GOALS respectively.
 MAVEN_DEFAULT_OPTS="-DskipTests"
@@ -166,16 +168,16 @@ if [[ ! -f "${APP_DIR}/Procfile" ]]; then
 		if dependencies::has_spring_boot "${APP_DIR}"; then
 			cat > "${launch_toml_path}" <<-EOF
 				[[processes]]
-				type = web
-				command = java -Dserver.port=\$PORT \$JAVA_OPTS -jar $jar_file
+				type = "web"
+				command = "java -Dserver.port=\$PORT \$JAVA_OPTS -jar ${jar_file}"
 			EOF
 		fi
 
 		if dependencies::has_wildfly_swarm "${APP_DIR}"; then
 			cat > "${launch_toml_path}" <<-EOF
 				[[processes]]
-				type = web
-				command = java -Dswarm.http.port=\$PORT \$JAVA_OPTS -jar $jar_file
+				type = "web"
+				command = "java -Dswarm.http.port=\$PORT -Djava.net.preferIPv4Stack=true \$JAVA_OPTS -jar ${jar_file}"
 			EOF
 		fi
 	fi
