@@ -35,4 +35,8 @@ public class App {
 
         server.start();
     }
+
+    public int getBogusValue() {
+        return 42;
+    }
 }

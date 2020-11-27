@@ -1,9 +1,11 @@
 require "rspec/core"
 require "rspec/retry"
 require "java-properties"
+require_relative "cnb_integration_testing/cnb_testing"
 
 RSpec.configure do |config|
-  #config.filter_run :focus => true
+  config.filter_run :focus => true
+  config.run_all_when_everything_filtered = true
 end
 
 def remove_maven_wrapper(app_dir)

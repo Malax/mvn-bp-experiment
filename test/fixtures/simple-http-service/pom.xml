@@ -29,6 +29,12 @@
       <artifactId>guava</artifactId>
       <version>30.0-jre</version>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.1</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -77,6 +83,22 @@
     </pluginManagement>
 
     <plugins>
+      <plugin>
+        <groupId>com.github.ekryd.echo-maven-plugin</groupId>
+        <artifactId>echo-maven-plugin</artifactId>
+        <version>1.2.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>echo</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <message>[BUILDPACK INTEGRATION TEST - MAVEN VERSION] ${maven.version}</message>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
