@@ -34,14 +34,13 @@ class PackBuildResult
 
     config = {
         "Image" => @image.id,
-        "ExposedPorts" => {
-        },
+        "ExposedPorts" => {},
         "HostConfig" => {
-          "PortBindings" => {
-          }
+          "PortBindings" => {}
         }
     }
 
+    # TODO: Race conditions?
     pool = RandomPort::Pool.new
 
     port_mappings = expose_ports.map { |container_port| [container_port, pool.acquire] }
@@ -98,9 +97,6 @@ class ContainerInterface
     ExecResult.new(result[0][0], result[1], result[2])
   end
 end
-
-
-
 
 def pack_build(app_dir, image_name: nil, buildpacks: [:this], env: {}, exception_on_failure: true)
   if image_name == nil

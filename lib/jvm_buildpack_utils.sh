@@ -26,13 +26,13 @@ bputils::get_java_properties_value() {
 bputils::download_and_extract_tarball() {
 	local -r tarball_url="${1:?}"
 	local -r target_directory="${2:?}"
-	curl --retry 3 --silent --max-time 60 --location "${tarball_url}" | tar -xzm -C "${target_directory}"
+	curl --retry 3 --silent --fail --max-time 60 --location "${tarball_url}" | tar -xzm -C "${target_directory}"
 }
 
 bputils::download_file() {
 	local -r url="${1:?}"
 	local -r target_path="${2:?}"
-	curl --retry 3 --silent --max-time 10 --location "${url}" --output "${target_path}"
+	curl --retry 3 --silent --fail --max-time 10 --location "${url}" --output "${target_path}"
 }
 
 bputils::runs_as_cnb() {

@@ -34,3 +34,24 @@ def set_system_properties_key(app_dir, key, value)
   properties[key.to_sym] = value
   JavaProperties.write(properties, path)
 end
+
+def write_settings_xml(app_dir, filename, test_value)
+  settings_xml = <<~EOF
+        <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+          <profiles>
+              <profile>
+                  <activation>
+                      <activeByDefault>true</activeByDefault>
+                  </activation>
+                  <properties>
+                      <heroku.maven.settings-test.value>#{test_value}</heroku.maven.settings-test.value>
+                  </properties>
+              </profile>
+          </profiles>
+        </settings>
+  EOF
+
+  File.open(File.join(app_dir, filename), "w") { |file| file.write(settings_xml) }
+end
