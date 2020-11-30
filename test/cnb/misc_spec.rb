@@ -2,8 +2,8 @@ require_relative "spec_helper"
 
 describe "Heroku's Maven Cloud Native Buildpack" do
   it "will write ${APP_DIR}/target/mvn-dependency-list.log with the app's dependencies" do
-    with_temporary_app_from_fixture("simple-http-service") do |app_dir|
-      pack_build(app_dir, buildpacks: ["heroku/jvm", :this, "heroku/procfile"], env: { MAVEN_CUSTOM_GOALS: "clean" }) do |pack_result|
+     rapier.app_dir_from_fixture("simple-http-service") do |app_dir|
+       rapier.pack_build(app_dir, build_env: { :MAVEN_CUSTOM_GOALS => "clean" }) do |pack_result|
         pack_result.start_container do |container|
           expected_dependency_list = <<~EOF
 
@@ -34,8 +34,8 @@ describe "Heroku's Maven Cloud Native Buildpack" do
   end
 
   it "will not leave unexpected files in ${APP_DIR}" do
-    with_temporary_app_from_fixture("simple-http-service") do |app_dir|
-      pack_build(app_dir, buildpacks: ["heroku/jvm", :this, "heroku/procfile"]) do |pack_result|
+     rapier.app_dir_from_fixture("simple-http-service") do |app_dir|
+       rapier.pack_build(app_dir) do |pack_result|
         pack_result.start_container do |container|
 
           expected_output = <<~EOF
@@ -83,8 +83,8 @@ describe "Heroku's Maven Cloud Native Buildpack" do
   end
 
   it "will not log internal Maven options and goals" do
-    with_temporary_app_from_fixture("simple-http-service") do |app_dir|
-      pack_build(app_dir, buildpacks: ["heroku/jvm", :this, "heroku/procfile"]) do |pack_result|
+     rapier.app_dir_from_fixture("simple-http-service") do |app_dir|
+       rapier.pack_build(app_dir) do |pack_result|
         expect(pack_result.stdout).to_not include("-Dmaven.repo.local=")
         expect(pack_result.stdout).to_not include("-Duser.home=")
         expect(pack_result.stdout).to_not include("dependency:list")
@@ -94,9 +94,9 @@ describe "Heroku's Maven Cloud Native Buildpack" do
   end
 
   it "will cache dependencies between builds" do
-    with_temporary_app_from_fixture("simple-http-service") do |app_dir|
-      pack_build(app_dir, buildpacks: ["heroku/jvm", :this, "heroku/procfile"]) do |first_pack_result|
-        pack_build(app_dir, image_name: first_pack_result.image_name, buildpacks: ["heroku/jvm", :this, "heroku/procfile"]) do |second_pack_result|
+     rapier.app_dir_from_fixture("simple-http-service") do |app_dir|
+       rapier.pack_build(app_dir) do |first_pack_result|
+         rapier.pack_build(app_dir, image_name: first_pack_result.image_name, buildpacks: ["heroku/jvm", :this, "heroku/procfile"]) do |second_pack_result|
           expect(first_pack_result.stdout).to include("Downloading from central")
           expect(second_pack_result.stdout).to_not include("Downloading from central")
         end
@@ -106,8 +106,8 @@ describe "Heroku's Maven Cloud Native Buildpack" do
 
   context "with an app that does not compile" do
     it "will exit with a descriptive error message" do
-      with_temporary_app_from_fixture("app-with-compile-error") do |app_dir|
-        pack_build(app_dir, buildpacks: ["heroku/jvm", :this, "heroku/procfile"], exception_on_failure: false) do |pack_result|
+       rapier.app_dir_from_fixture("app-with-compile-error") do |app_dir|
+         rapier.pack_build(app_dir, exception_on_failure: false) do |pack_result|
           expect(pack_result.build_success?).to be(false)
           expect(pack_result.stdout).to include("[INFO] BUILD FAILURE")
 

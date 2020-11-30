@@ -1,7 +1,11 @@
 require "rspec/core"
 require "rspec/retry"
 require "java-properties"
-require_relative "cnb_integration_testing/cnb_testing"
+require_relative "rapier/rapier"
+
+def rapier
+  Rapier::Runner.new("test/fixtures", default_buildpacks: ["heroku/jvm", :this, "heroku/procfile"])
+end
 
 RSpec.configure do |config|
   config.filter_run :focus => true
