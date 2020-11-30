@@ -13,7 +13,7 @@ describe "Heroku's Maven Cloud Native Buildpack" do
       end
     end
 
-    it "will fail with a descriptive error message if that settings.xml file could not be downloaded", :focus => true do
+    it "will fail with a descriptive error message if that settings.xml file could not be downloaded" do
       with_temporary_app_from_fixture("simple-http-service") do |app_dir|
         pack_build(app_dir, buildpacks: ["heroku/jvm", :this, "heroku/procfile"], exception_on_failure: false, env: { :MAVEN_SETTINGS_URL => "https://gist.githubusercontent.com/Malax/settings.xml" }) do |pack_result|
           expect(pack_result.build_success?).to be(false)
