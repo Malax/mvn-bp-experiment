@@ -18,6 +18,8 @@ describe "Heroku's Maven Cloud Native Buildpack" do
         pack_build(app_dir, buildpacks: ["heroku/jvm", :this, "heroku/procfile"], exception_on_failure: false, env: { :MAVEN_SETTINGS_URL => "https://gist.githubusercontent.com/Malax/settings.xml" }) do |pack_result|
           expect(pack_result.build_success?).to be(false)
           expect(pack_result.stdout).to include("Could not download settings.xml from the URL defined in MAVEN_SETTINGS_URL:")
+          # This error message comes from Maven itself. We expect Maven to to be executed at all.
+          expect(pack_result).to_not include("[INFO] BUILD FAILURE")
         end
       end
     end
