@@ -21,11 +21,11 @@ module Rapier
     end
 
     def pack_build(app_dir, image_name: nil, buildpacks: [], build_env: {}, exception_on_failure: true)
-      image_name="cnb_test_" + SecureRandom.hex(10) if image_name == nil
-      buildpacks=@default_buildpacks if buildpacks.empty?
+      image_name = "cnb_test_" + SecureRandom.hex(10) if image_name == nil
+      buildpacks = @default_buildpacks if buildpacks.empty?
 
-      buildpack_argument="--buildpack" + buildpacks.map { |bp | bp == :this ? "." : bp }.join(",")
-      env_arguments = env.keys.map{ |key| "--env #{key}=#{env[key]}" }.join(" ")
+      buildpack_argument = "--buildpack" + buildpacks.map { |bp| bp == :this ? "." : bp }.join(",")
+      env_arguments = env.keys.map { |key| "--env #{key}=#{env[key]}" }.join(" ")
       pack_command = "pack build #{image_name} --path #{app_dir} #{env_arguments} #{buildpack_argument}"
 
       pack_stdout, pack_stderr, pack_status = Open3.capture3(pack_command)
@@ -51,11 +51,11 @@ module Rapier
     attr_reader :stdout, :stderr, :status, :image, :image_name
 
     def initialize(stdout, stderr, status, image, image_name)
-      @stdout=stdout
-      @stderr=stderr
-      @status=status
-      @image=image
-      @image_name=image_name
+      @stdout = stdout
+      @stderr = stderr
+      @status = status
+      @image = image
+      @image_name = image_name
       freeze
     end
 
@@ -77,10 +77,10 @@ module Rapier
       expose_ports.each do |port|
         config["ExposedPorts"]["#{port}/tcp"] = {}
         # If we do not specify a port, Docker will grab a random unused one:
-        config["HostConfig"]["PortBindings"]["#{port}/tcp"] = [{ "HostPort" => ""}]
+        config["HostConfig"]["PortBindings"]["#{port}/tcp"] = [{"HostPort" => ""}]
       end
 
-      container=Docker::Container.create(config)
+      container = Docker::Container.create(config)
       container.start
 
       begin
@@ -117,9 +117,9 @@ module Rapier
       attr_reader :stdout, :stderr, :status
 
       def initialize(stdout, stderr, status)
-        @stdout=stdout
-        @stderr=stderr
-        @status=status
+        @stdout = stdout
+        @stderr = stderr
+        @status = status
         freeze
       end
     end

@@ -19,17 +19,17 @@ def remove_maven_wrapper(app_dir)
 end
 
 def set_java_version(app_dir, version_string)
-  set_system_properties_key(app_dir,"java.runtime.version", version_string)
+  set_system_properties_key(app_dir, "java.runtime.version", version_string)
 end
 
 def set_maven_version(app_dir, version_string)
-  set_system_properties_key(app_dir,"maven.version", version_string)
+  set_system_properties_key(app_dir, "maven.version", version_string)
 end
 
 def set_system_properties_key(app_dir, key, value)
   properties = {}
 
-  path="#{app_dir}/system.properties"
+  path = "#{app_dir}/system.properties"
 
   if File.file?(path)
     properties = JavaProperties.load(path)
